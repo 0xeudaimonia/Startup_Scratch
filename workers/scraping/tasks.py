@@ -65,7 +65,7 @@ def _discover_and_ingest(source_name: str) -> dict:
         status = ScrapeStatus.FAILED
         session.rollback()
     except Exception as exc:  # noqa: BLE001
-        errors.append(str(exc))
+        errors.append(f"{type(exc).__name__}: {exc}")
         status = ScrapeStatus.FAILED
         session.rollback()
         logger.exception("source_failed", extra={"source": source_name})
