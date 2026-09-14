@@ -57,6 +57,7 @@ Enabled by default:
 
 - `fixture` — deterministic demo source
 - `ycombinator` / `yc_jobs` — public yc-oss JSON (not HTML scraping)
+- `growthlist` — public [Growth List](https://growthlist.co/) sample tables (funded, pre-seed, seed, Series A/B, AI, SaaS, B2B, FinTech, e-commerce, US, San Francisco, Finland). Not the paid Google Sheets / member database.
 - `hackernews` — HN Algolia API
 - `techcrunch`, `eu_startups`, `sifted` — RSS feeds (articles are evidence, not canonical records)
 
@@ -75,6 +76,7 @@ From the Sources page, or:
 ```bash
 docker compose exec api python scripts/run_scraper.py --source fixture
 docker compose exec api python scripts/run_scraper.py --source ycombinator
+docker compose exec api python scripts/run_scraper.py --source growthlist
 ```
 
 Celery Beat also runs funding/news/launch/enrichment jobs on a schedule.
