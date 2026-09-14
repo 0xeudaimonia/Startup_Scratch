@@ -48,7 +48,8 @@ def _discover_and_ingest(source_name: str) -> dict:
         found = len(records)
         for raw in records:
             try:
-                _, action = ingest_raw_company(session, raw)
+                with session.begin_nested():
+                    _, action = ingest_raw_company(session, raw)
                 if action == "created":
                     created += 1
                 elif action == "updated":
@@ -56,7 +57,7 @@ def _discover_and_ingest(source_name: str) -> dict:
                 elif action == "review":
                     duplicates += 1
             except Exception as exc:  # noqa: BLE001
-                errors.append(f"{raw.name}: {exc}")
+                errors.append(f"{raw.name}: {type(exc).__name__}: {str(exc)[:240]}")
                 logger.exception("ingest_failed", extra={"source": source_name, "company": raw.name})
         session.commit()
         status = ScrapeStatus.SUCCESS if not errors else ScrapeStatus.PARTIAL

@@ -3,6 +3,7 @@ from __future__ import annotations
 from sources.accelerators.ycombinator import YCombinatorSource
 from sources.base import StartupSource
 from sources.funding.dealroom import DealroomSource
+from sources.funding.growthlist import GrowthListSource
 from sources.job_boards.wellfound import WellfoundSource
 from sources.job_boards.yc_jobs import YCJobsSource
 from sources.launch_platforms.hackernews import HackerNewsLaunchSource
@@ -35,6 +36,7 @@ def all_sources() -> list[StartupSource]:
         EUStartupsSource(),
         SiftedSource(),
         DealroomSource(),
+        GrowthListSource(),
         WellfoundSource(),
         YCJobsSource(),
         SequoiaSource(),
