@@ -1,0 +1,23 @@
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app:/app/packages:/app/apps:/app/workers:/app/sources \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential libpq-dev curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml /app/pyproject.toml
+RUN pip install --no-cache-dir \
+    fastapi uvicorn[standard] pydantic pydantic-settings \
+    "sqlalchemy>=2.0" asyncpg psycopg2-binary alembic \
+    "celery[redis]" redis httpx beautifulsoup4 lxml feedparser \
+    pandas rapidfuzz tldextract tenacity python-slugify orjson pytest pytest-asyncio
+
+COPY . /app
+
+EXPOSE 8000

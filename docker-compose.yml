@@ -1,0 +1,104 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-startup_radar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-startup_radar}
+      POSTGRES_DB: ${POSTGRES_DB:-startup_radar}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-startup_radar} -d ${POSTGRES_DB:-startup_radar}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.python
+    command: >
+      sh -c "alembic upgrade head &&
+             python scripts/seed.py &&
+             uvicorn api.main:app --host 0.0.0.0 --port 8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-startup_radar}:${POSTGRES_PASSWORD:-startup_radar}@postgres:5432/${POSTGRES_DB:-startup_radar}
+      DATABASE_URL_SYNC: postgresql://${POSTGRES_USER:-startup_radar}:${POSTGRES_PASSWORD:-startup_radar}@postgres:5432/${POSTGRES_DB:-startup_radar}
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    working_dir: /app
+
+  worker:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.python
+    command: celery -A workers.celery_app:celery_app worker --loglevel=info --concurrency=2
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-startup_radar}:${POSTGRES_PASSWORD:-startup_radar}@postgres:5432/${POSTGRES_DB:-startup_radar}
+      DATABASE_URL_SYNC: postgresql://${POSTGRES_USER:-startup_radar}:${POSTGRES_PASSWORD:-startup_radar}@postgres:5432/${POSTGRES_DB:-startup_radar}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    volumes:
+      - .:/app
+    working_dir: /app
+
+  beat:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.python
+    command: celery -A workers.celery_app:celery_app beat --loglevel=info
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-startup_radar}:${POSTGRES_PASSWORD:-startup_radar}@postgres:5432/${POSTGRES_DB:-startup_radar}
+      DATABASE_URL_SYNC: postgresql://${POSTGRES_USER:-startup_radar}:${POSTGRES_PASSWORD:-startup_radar}@postgres:5432/${POSTGRES_DB:-startup_radar}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      worker:
+        condition: service_started
+    volumes:
+      - .:/app
+    working_dir: /app
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: ../../infra/docker/Dockerfile.web
+    environment:
+      API_INTERNAL_URL: http://api:8000
+      PORT: 3000
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
