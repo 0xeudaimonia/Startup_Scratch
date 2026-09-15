@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { dateDaysAgo, fetchCompanies, isoDaysAgo } from "@/lib/api";
 import type { CompanyQuery } from "@/lib/types";
 import { CompanyFilters } from "@/components/companies/company-filters";
@@ -9,9 +9,15 @@ import { CompanyGrid } from "@/components/companies/company-card";
 import { CompanyTable } from "@/components/companies/company-table";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Pagination, parsePage } from "@/components/ui/pagination";
 
 export function queryFromSearch(params: URLSearchParams, extra: CompanyQuery = {}): CompanyQuery {
-  const query: CompanyQuery = { page_size: 24, sort: params.get("sort") || extra.sort || "newest_discovered", ...extra };
+  const query: CompanyQuery = {
+    page_size: 24,
+    sort: params.get("sort") || extra.sort || "newest_discovered",
+    ...extra,
+  };
+  query.page = parsePage(params.get("page"));
   const search = params.get("search");
   if (search) query.search = search;
   const discovered = params.get("discovered") || (extra.discovered as string | undefined);
@@ -66,7 +72,13 @@ export function CompanyBrowser({
   const companies = useQuery({
     queryKey: ["companies", query],
     queryFn: () => fetchCompanies(query),
+    placeholderData: keepPreviousData,
   });
+  const total = companies.data?.total ?? 0;
+  const pageSize = companies.data?.page_size || Number(query.page_size) || 24;
+  const page = companies.data?.page || Number(query.page) || 1;
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
 
   return (
     <div className="space-y-5">
@@ -87,17 +99,30 @@ export function CompanyBrowser({
       <div className={hideFilters ? "" : "flex flex-col gap-5 lg:flex-row"}>
         {hideFilters ? null : <CompanyFilters />}
         <div className="min-w-0 flex-1 space-y-4">
-          <div className="text-sm text-muted-foreground">{companies.data?.total ?? 0} companies</div>
-          {companies.isLoading ? (
+          <div className="text-sm text-muted-foreground">
+            {companies.isLoading && !companies.data
+              ? "Loading companies…"
+              : total === 0
+                ? "0 companies"
+                : `Showing ${from}–${to} of ${total} companies`}
+          </div>
+          {companies.isLoading && !companies.data ? (
             <div className="rounded-xl border bg-white p-10 text-sm text-muted-foreground">Loading companies…</div>
-          ) : companies.isError ? (
+          ) : companies.isError && !companies.data ? (
             <div className="rounded-xl border border-red-200 bg-red-50 p-10 text-sm text-red-700">
               Could not load companies. {companies.error instanceof Error ? companies.error.message : ""}
             </div>
-          ) : view === "table" ? (
-            <CompanyTable companies={companies.data?.items || []} />
           ) : (
-            <CompanyGrid companies={companies.data?.items || []} />
+            <>
+              <div className={companies.isFetching ? "opacity-60 transition-opacity" : ""}>
+                {view === "table" ? (
+                  <CompanyTable companies={companies.data?.items || []} />
+                ) : (
+                  <CompanyGrid companies={companies.data?.items || []} />
+                )}
+              </div>
+              <Pagination page={page} pageSize={pageSize} total={total} label="Company pagination" />
+            </>
           )}
         </div>
       </div>

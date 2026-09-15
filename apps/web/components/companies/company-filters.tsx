@@ -76,6 +76,7 @@ export function CompanyFilters() {
     const next = new URLSearchParams(params.toString());
     if (!value) next.delete(key);
     else next.set(key, value);
+    next.delete("page");
     router.push(`?${next.toString()}`);
   }
 
