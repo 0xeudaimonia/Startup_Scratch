@@ -8,7 +8,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from api.query import SORT_MAP, apply_company_filters, load_company, serialize_card, serialize_detail
-from api.schemas import CompanyCard, CompanyDetail, FundingRoundOut, InvestorOut, JobOut, PaginatedCompanies
+from api.schemas import (
+    CheckedUpdate,
+    CompanyCard,
+    CompanyDetail,
+    FundingRoundOut,
+    InvestorOut,
+    JobOut,
+    PaginatedCompanies,
+)
 from database.models import Company, CompanyInvestor
 from database.session import get_db
 
@@ -38,6 +46,7 @@ async def list_companies(
     investor: str | None = None,
     minimum_opportunity_score: int | None = None,
     has_remote_engineering_jobs: bool | None = None,
+    is_checked: bool | None = None,
     sort: str = Query("newest_discovered"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -69,6 +78,7 @@ async def list_companies(
         investor=investor,
         minimum_opportunity_score=minimum_opportunity_score,
         has_remote_engineering_jobs=has_remote_engineering_jobs,
+        is_checked=is_checked,
     )
     count_stmt = select(func.count()).select_from(stmt.order_by(None).subquery())
     total = await db.scalar(count_stmt) or 0
@@ -90,6 +100,23 @@ async def get_company(company_id: str, db: AsyncSession = Depends(get_db)) -> Co
     if company is None:
         raise HTTPException(status_code=404, detail="Company not found")
     return CompanyDetail.model_validate(serialize_detail(company))
+
+
+@router.patch("/{company_id}", response_model=CompanyCard)
+async def update_company(
+    company_id: str,
+    payload: CheckedUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> CompanyCard:
+    company = await load_company(db, company_id)
+    if company is None:
+        raise HTTPException(status_code=404, detail="Company not found")
+    company.is_checked = payload.is_checked
+    await db.commit()
+    company = await load_company(db, company_id)
+    if company is None:
+        raise HTTPException(status_code=404, detail="Company not found")
+    return CompanyCard.model_validate(serialize_card(company))
 
 
 @router.get("/{company_id}/jobs", response_model=list[JobOut])

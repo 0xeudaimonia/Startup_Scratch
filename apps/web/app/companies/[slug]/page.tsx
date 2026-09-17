@@ -6,6 +6,7 @@ import { fetchCompany } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CompanyCheckToggle, JobCheckToggle } from "@/components/checked-toggle";
 import { formatDate, formatMoney, remoteLabel, scoreTone, stageLabel } from "@/lib/utils";
 
 function ScoreBreakdown({ breakdown }: { breakdown: Record<string, number> }) {
@@ -50,7 +51,8 @@ export default function CompanyDetailPage() {
           <div className="text-xs uppercase tracking-wide text-muted-foreground">{c.normalized_domain}</div>
           <h1 className="text-3xl font-semibold tracking-tight">{c.name}</h1>
           <p className="mt-2 max-w-2xl text-slate-600">{c.description || c.short_description}</p>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <CompanyCheckToggle companyId={c.id} checked={c.is_checked} />
             <Badge>{stageLabel(c.funding_stage)}</Badge>
             <Badge>{remoteLabel(c.remote_policy)}</Badge>
             {c.primary_industry ? <Badge>{c.primary_industry}</Badge> : null}
@@ -184,10 +186,13 @@ export default function CompanyDetailPage() {
         <CardContent className="space-y-2">
           {(c.jobs || []).filter((job) => job.active).map((job) => (
             <div key={job.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 text-sm">
-              <div>
-                <div className="font-medium">{job.title}</div>
-                <div className="text-muted-foreground">
-                  {job.role_category || "engineering"} · {job.location || "n/a"} · {job.remote_type || "unknown"}
+              <div className="flex items-start gap-3">
+                <JobCheckToggle jobId={job.id} checked={job.is_checked} label="" />
+                <div>
+                  <div className="font-medium">{job.title}</div>
+                  <div className="text-muted-foreground">
+                    {job.role_category || "engineering"} · {job.location || "n/a"} · {job.remote_type || "unknown"}
+                  </div>
                 </div>
               </div>
               {job.job_url ? (

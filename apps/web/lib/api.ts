@@ -15,7 +15,7 @@ const API_BASE = "/backend/api/v1";
 function toParams(query: CompanyQuery = {}) {
   const params = new URLSearchParams();
   Object.entries(query).forEach(([key, value]) => {
-    if (value === undefined || value === "" || value === false) return;
+    if (value === undefined || value === "") return;
     params.set(key, String(value));
   });
   return params.toString();
@@ -23,6 +23,18 @@ function toParams(query: CompanyQuery = {}) {
 
 async function get<T>(path: string): Promise<T> {
   const response = await fetch(path, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+  return response.json() as Promise<T>;
+}
+
+async function patch<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(path, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);
   }
@@ -38,9 +50,17 @@ export async function fetchCompany(slug: string) {
   return get<CompanyDetail>(`${API_BASE}/companies/${slug}`);
 }
 
+export async function setCompanyChecked(id: string, is_checked: boolean) {
+  return patch<CompanyCard>(`${API_BASE}/companies/${id}`, { is_checked });
+}
+
 export async function fetchJobs(query: CompanyQuery = {}) {
   const qs = toParams(query);
   return get<Paginated<Job>>(`${API_BASE}/jobs${qs ? `?${qs}` : ""}`);
+}
+
+export async function setJobChecked(id: string, is_checked: boolean) {
+  return patch<Job>(`${API_BASE}/jobs/${id}`, { is_checked });
 }
 
 export async function fetchStats() {

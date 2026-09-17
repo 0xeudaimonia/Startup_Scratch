@@ -6,6 +6,7 @@ import type { CompanyCard } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { CompanyCheckToggle } from "@/components/checked-toggle";
 import { daysAgo, formatDate, formatMoney, remoteLabel, scoreTone, stageLabel } from "@/lib/utils";
 
 function Logo({ company }: { company: CompanyCard }) {
@@ -35,7 +36,7 @@ export function CompanyCardView({ company }: { company: CompanyCard }) {
   const website = company.website_url;
   const careers = company.careers_url || company.jobs_url;
   return (
-    <Card className="flex h-full flex-col">
+    <Card className={`flex h-full flex-col ${company.is_checked ? "border-emerald-200 bg-emerald-50/40" : ""}`}>
       <CardContent className="flex h-full flex-col gap-4 pt-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
@@ -45,6 +46,9 @@ export function CompanyCardView({ company }: { company: CompanyCard }) {
                 {company.name}
               </Link>
               <div className="text-xs text-muted-foreground">{company.normalized_domain || "No website"}</div>
+              <div className="mt-2">
+                <CompanyCheckToggle companyId={company.id} checked={company.is_checked} />
+              </div>
             </div>
           </div>
           <div className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${scoreTone(company.opportunity_score)}`}>

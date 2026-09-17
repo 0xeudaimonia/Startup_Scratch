@@ -57,6 +57,7 @@ class JobOut(BaseModel):
     first_seen_at: datetime | None = None
     last_seen_at: datetime | None = None
     active: bool = True
+    is_checked: bool = False
     company_name: str | None = None
     company_slug: str | None = None
 
@@ -101,6 +102,7 @@ class CompanyCard(BaseModel):
     growth_score: int = 0
     is_hiring: bool = False
     hiring_engineers: bool = False
+    is_checked: bool = False
     first_discovered_at: datetime | None = None
     first_source: str | None = None
     primary_industry: str | None = None
@@ -236,3 +238,7 @@ class SavedViewOut(BaseModel):
 
 class ScrapeRequest(BaseModel):
     source: str = "fixture"
+
+
+class CheckedUpdate(BaseModel):
+    is_checked: bool

@@ -25,6 +25,7 @@ export type CompanyCard = {
   growth_score: number;
   is_hiring: boolean;
   hiring_engineers: boolean;
+  is_checked: boolean;
   first_discovered_at?: string | null;
   first_source?: string | null;
   primary_industry?: string | null;
@@ -44,6 +45,7 @@ export type Job = {
   source?: string | null;
   posted_date?: string | null;
   active: boolean;
+  is_checked: boolean;
   company_name?: string | null;
   company_slug?: string | null;
 };
