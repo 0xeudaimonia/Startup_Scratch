@@ -9,10 +9,16 @@ import {
 } from "@tanstack/react-table";
 import type { CompanyCard } from "@/lib/types";
 import { formatDate, formatMoney, remoteLabel, stageLabel } from "@/lib/utils";
+import { CompanyCheckToggle } from "@/components/checked-toggle";
 
 const helper = createColumnHelper<CompanyCard>();
 
 const columns = [
+  helper.display({
+    id: "checked",
+    header: "Checked",
+    cell: (info) => <CompanyCheckToggle companyId={info.row.original.id} checked={info.row.original.is_checked} label="" />,
+  }),
   helper.accessor("name", {
     header: "Company",
     cell: (info) => (
@@ -51,7 +57,7 @@ export function CompanyTable({ companies }: { companies: CompanyCard[] }) {
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="border-t">
+            <tr key={row.id} className={`border-t ${row.original.is_checked ? "bg-emerald-50/40" : ""}`}>
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id} className="px-4 py-3">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}

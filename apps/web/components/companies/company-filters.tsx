@@ -115,6 +115,20 @@ export function CompanyFilters() {
         </div>
       </div>
       <section>
+        <h4 className="mb-2 text-xs font-semibold uppercase text-slate-400">Check status</h4>
+        <div className="flex flex-wrap gap-1.5">
+          <Chip active={!params.get("checked")} onClick={() => set("checked", undefined)}>
+            All
+          </Chip>
+          <Chip active={params.get("checked") === "true"} onClick={() => set("checked", "true")}>
+            Checked
+          </Chip>
+          <Chip active={params.get("checked") === "false"} onClick={() => set("checked", "false")}>
+            Unchecked
+          </Chip>
+        </div>
+      </section>
+      <section>
         <h4 className="mb-2 text-xs font-semibold uppercase text-slate-400">Discovered</h4>
         <div className="flex flex-wrap gap-1.5">
           {DISCOVERED.map((item) => (

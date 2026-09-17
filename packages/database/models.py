@@ -37,6 +37,7 @@ class Company(Base):
         Index("ix_companies_opportunity_score", "opportunity_score"),
         Index("ix_companies_remote_policy", "remote_policy"),
         Index("ix_companies_funding_stage", "funding_stage"),
+        Index("ix_companies_is_checked", "is_checked"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -156,6 +157,7 @@ class Company(Base):
     first_discovered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     last_updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    is_checked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     first_source: Mapped[str | None] = mapped_column(String(100))
     discovery_sources: Mapped[list[str]] = mapped_column(JSONB, default=list)
     deduplication_confidence: Mapped[float | None] = mapped_column(Float)
@@ -233,7 +235,10 @@ class CompanyInvestor(Base):
 
 class Job(Base):
     __tablename__ = "jobs"
-    __table_args__ = (Index("ix_jobs_company_active", "company_id", "active"),)
+    __table_args__ = (
+        Index("ix_jobs_company_active", "company_id", "active"),
+        Index("ix_jobs_is_checked", "is_checked"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id: Mapped[uuid.UUID] = mapped_column(
@@ -256,6 +261,7 @@ class Job(Base):
     first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_checked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
     external_id: Mapped[str | None] = mapped_column(String(255))
 

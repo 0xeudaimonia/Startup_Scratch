@@ -48,6 +48,9 @@ export function queryFromSearch(params: URLSearchParams, extra: CompanyQuery = {
   if (params.get("is_hiring") === "true") query.is_hiring = true;
   if (params.get("hiring_engineers") === "true") query.hiring_engineers = true;
   if (params.get("has_remote_engineering_jobs") === "true") query.has_remote_engineering_jobs = true;
+  const checked = params.get("checked") || params.get("is_checked");
+  if (checked === "true") query.is_checked = true;
+  if (checked === "false") query.is_checked = false;
   if (params.get("employee_max")) query.employee_max = Number(params.get("employee_max"));
   if (params.get("minimum_opportunity_score")) {
     query.minimum_opportunity_score = Number(params.get("minimum_opportunity_score"));

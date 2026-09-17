@@ -34,6 +34,7 @@ def apply_company_filters(
     investor: str | None = None,
     minimum_opportunity_score: int | None = None,
     has_remote_engineering_jobs: bool | None = None,
+    is_checked: bool | None = None,
 ) -> Select:
     conditions = []
     if search:
@@ -115,6 +116,8 @@ def apply_company_filters(
     if has_remote_engineering_jobs:
         conditions.append(Company.engineering_job_count > 0)
         conditions.append(Company.remote_job_count > 0)
+    if is_checked is not None:
+        conditions.append(Company.is_checked.is_(is_checked))
     if conditions:
         stmt = stmt.where(and_(*conditions))
     return stmt
@@ -164,6 +167,7 @@ def serialize_card(company: Company) -> dict:
         "growth_score": company.growth_score,
         "is_hiring": company.is_hiring,
         "hiring_engineers": company.hiring_engineers,
+        "is_checked": company.is_checked,
         "first_discovered_at": company.first_discovered_at,
         "first_source": company.first_source,
         "primary_industry": company.primary_industry,
